@@ -23,7 +23,7 @@ export const adminController = {
             where: { email }
         });
         if (existingAdmin) {
-            return reply.status(402).send({ success: false, message: "Username already exists" });
+            return reply.status(402).send({ success: false, message: "Email already exists" });
         }
 
         const hashedPassword = await hashPassword(password);
