@@ -7,6 +7,8 @@ import { adminController } from "./controllers/admin-controller";
 import { adminLoginSchema, adminRegisterSchema } from "./schemas/adminSchemas";
 import { userRegisterSchema, watchContentSchema } from "./schemas/userSchema";
 import { userController } from "./controllers/user-controller";
+import { createMovieSchema, movieSchema, updateMovieSchema } from "./schemas/movieSchema";
+import { moviesController } from "./controllers/movies-controller";
 
 export async function routes(app: FastifyTypeInstance) {
   // Admin routes
@@ -107,6 +109,67 @@ export async function routes(app: FastifyTypeInstance) {
       }
     }
   }, userController.watchLater);
+
+
+
+  // Movie routes
+  app.get("/movie", {
+    schema: {
+      tags: ["Movie"],
+      deprecated: false,
+      description: "Get all movies",
+      response: {
+        200: z.object({ success: z.boolean(), movies: movieSchema.array() }),
+        500: z.object({ success: z.boolean(), message: z.string() })
+      }
+    }
+  },moviesController.getAll);
+
+  app.post("/movie", {
+    schema: {
+      tags: ["Movie"],
+      deprecated: false,
+      description: "Create a movie",
+      body: createMovieSchema,
+      response: {
+        201: z.object({ success: z.boolean(), message: z.string() }),
+        400: z.object({ success: z.boolean(), message: z.string() }),
+        401: z.object({ success: z.boolean(), message: z.string() }),
+        403: z.object({ success: z.boolean(), message: z.string() }),
+        500: z.object({ success: z.boolean(), message: z.string() })
+      }
+    }
+  }, moviesController.create);
+
+  app.put<{ Params: { id: string } }>("/movie/:id", {
+    schema: {
+      tags: ["Movie"],
+      deprecated: false,
+      description: "Update a movie",
+      body: updateMovieSchema,
+      response: {
+        203: z.object({ success: z.boolean(), message: z.string() }),
+        400: z.object({ success: z.boolean(), message: z.string() }),
+        401: z.object({ success: z.boolean(), message: z.string() }),
+        403: z.object({ success: z.boolean(), message: z.string() }),
+        500: z.object({ success: z.boolean(), message: z.string() })
+      }
+    }
+  }, moviesController.update);
+
+  app.delete<{ Params: { id: string } }>("/movie/:id", {
+    schema: {
+      tags: ["Movie"],
+      deprecated: false,
+      description: "Delete a movie",
+      response: {
+        204: z.object({ success: z.boolean(), message: z.string() }),
+        401: z.object({ success: z.boolean(), message: z.string() }),
+        403: z.object({ success: z.boolean(), message: z.string() }),
+        500: z.object({ success: z.boolean(), message: z.string() })
+      }
+    }
+  }, moviesController.delete);
 
 
   
