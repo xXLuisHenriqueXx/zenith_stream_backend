@@ -1,0 +1,117 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ROLE_USER
+  ROLE_ADMIN
+}
+
+enum AgeRestriction {
+  AGE_ALL
+  AGE_10
+  AGE_12
+  AGE_14
+  AGE_16
+  AGE_18
+}
+
+enum SeriesType {
+  SERIES_SOAP_OPERA
+  SERIES_TV_SHOW
+  SERIES_ANIME
+}
+
+model User {
+  id              String                @id @unique @default(uuid())
+  username        String                @unique
+  email           String                @unique
+  password        String
+  age             Int
+  role            Role                  @default(ROLE_USER)
+  watchedContent  UserWatchedContent[]
+  watchLater      UserWatchLater[]
+  createdAt       DateTime              @default(now()) 
+}
+
+model Series {
+  id              String                @id @unique @default(uuid())
+  title           String                @unique
+  description     String
+  producer        String
+  ageRestriction  AgeRestriction        @default(AGE_ALL)
+  releaseYear     Int
+  type            SeriesType
+  episodes        Episode[]
+  tags            Tags[]
+  watchedBy       UserWatchedContent[]
+  watchLaterBy    UserWatchLater[]
+  createdAt       DateTime              @default(now())  
+}
+
+model Episode {
+  id              String                @id @unique @default(uuid())
+  title           String                @unique
+  description     String
+  durationMinutes Int
+  season          Int
+  episodeNumber   Int
+  series          Series                @relation(fields: [seriesId], references: [id])
+  seriesId        String
+  createdAt       DateTime              @default(now())  
+}
+
+model Movie {
+  id              String                @id @unique @default(uuid())
+  title           String                @unique
+  description     String
+  director        String
+  durationMinutes Int
+  ageRestriction  AgeRestriction        @default(AGE_ALL)
+  tags            Tags[]
+  watchedBy       UserWatchedContent[]
+  watchLaterBy    UserWatchLater[]
+  releaseYear     Int
+  createdAt       DateTime              @default(now())  
+}
+
+model Tags {
+  id              String                @id @unique @default(uuid())
+  name            String                @unique
+  series          Series[]
+  movies          Movie[]
+  createdAt       DateTime              @default(now())  
+}
+
+model UserWatchedContent {
+  id              String                @id @unique @default(uuid())
+  user            User                  @relation(fields: [userId], references: [id])
+  userId          String
+  series          Series                @relation(fields: [seriesId], references: [id])
+  seriesId        String
+  movie           Movie                 @relation(fields: [movieId], references: [id])
+  movieId         String
+  createdAt       DateTime              @default(now())  
+}
+
+model UserWatchLater {
+  id              String                @id @unique @default(uuid())
+  user            User                  @relation(fields: [userId], references: [id])
+  userId          String
+  series          Series                @relation(fields: [seriesId], references: [id])
+  seriesId        String
+  movie           Movie                 @relation(fields: [movieId], references: [id])
+  movieId         String
+  createdAt       DateTime              @default(now())  
+}
