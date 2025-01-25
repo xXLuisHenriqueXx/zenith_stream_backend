@@ -14,7 +14,7 @@ export const adminLoginSchema = z.object({
 });
 
 export const adminSchema = z.object({
-    id: z.number(),
+    id: z.string().uuid(),
     username: z.string(),
     email: z.string().email(),
     age: z.enum(["AGE_ALL", "AGE_10", "AGE_12", "AGE_14", "AGE_16", "AGE_18"]),

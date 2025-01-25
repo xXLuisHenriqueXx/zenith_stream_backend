@@ -13,9 +13,3 @@ export type FastifyTypeInstance = FastifyInstance<
     FastifyBaseLogger,
     ZodTypeProvider
 >;
-
-declare module "fastify" {
-    interface FastifyRequest {
-        user?: any;
-    }
-};
