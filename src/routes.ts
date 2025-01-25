@@ -1,8 +1,12 @@
 import { z } from "zod";
 
 import { FastifyTypeInstance } from "./types";
-import { adminLoginSchema, adminRegisterSchema } from "./schemas/adminSchemas";
+
 import { adminController } from "./controllers/admin-controller";
+
+import { adminLoginSchema, adminRegisterSchema } from "./schemas/adminSchemas";
+import { userRegisterSchema, watchContentSchema } from "./schemas/userSchema";
+import { userController } from "./controllers/user-controller";
 
 export async function routes(app: FastifyTypeInstance) {
   // Admin routes
@@ -37,6 +41,72 @@ export async function routes(app: FastifyTypeInstance) {
       }
     }
   }, adminController.login);
+
+  
+
+  // User routes
+  app.post("/user/register", {
+    schema: {
+      tags: ["User"],
+      deprecated: false,
+      description: "Register a new user",
+      body: userRegisterSchema,
+      response: {
+        201: z.object({ success: z.boolean(), message: z.string() }),
+        400: z.object({ success: z.boolean(), message: z.string() }),
+        402: z.object({ success: z.boolean(), message: z.string() }),
+        500: z.object({ success: z.boolean(), message: z.string() })
+      }
+    }
+  }, userController.register);
+
+  app.post("/user/login", {
+    schema: {
+      tags: ["User"],
+      deprecated: false,
+      description: "Login as user",
+      body: adminLoginSchema,
+      response: {
+        201: z.object({ success: z.boolean(), message: z.string() }),
+        400: z.object({ success: z.boolean(), message: z.string() }),
+        401: z.object({ success: z.boolean(), message: z.string() }),
+        404: z.object({ success: z.boolean(), message: z.string() }),
+        500: z.object({ success: z.boolean(), message: z.string() })
+      }
+    }
+  }, userController.login);
+
+  app.put("/user/watch-content", {
+    schema: {
+      tags: ["User"],
+      deprecated: false,
+      description: "Watch content",
+      body: watchContentSchema,
+      response: {
+        203: z.object({ success: z.boolean(), message: z.string() }),
+        400: z.object({ success: z.boolean(), message: z.string() }),
+        401: z.object({ success: z.boolean(), message: z.string() }),
+        404: z.object({ success: z.boolean(), message: z.string() }),
+        500: z.object({ success: z.boolean(), message: z.string() })
+      }
+    }
+  }, userController.watchContent);
+
+  app.put("/user/watch-later", {
+    schema: {
+      tags: ["User"],
+      deprecated: false,
+      description: "Watch later",
+      body: watchContentSchema,
+      response: {
+        203: z.object({ success: z.boolean(), message: z.string() }),
+        400: z.object({ success: z.boolean(), message: z.string() }),
+        401: z.object({ success: z.boolean(), message: z.string() }),
+        404: z.object({ success: z.boolean(), message: z.string() }),
+        500: z.object({ success: z.boolean(), message: z.string() })
+      }
+    }
+  }, userController.watchLater);
 
 
   
