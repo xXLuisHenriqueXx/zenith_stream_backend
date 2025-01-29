@@ -1,16 +1,60 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { prisma } from '../prisma';
 import { cookieService } from '../services/cookieService';
-import { createMovieSchema, updateMovieSchema } from '../schemas/movieSchema';
+import { createTagSchema, getContentByTagSchema, updateTagSchema } from '../schemas/tagSchema';
 
-export const moviesController = {
+export const tagController = {
     async getAll(request: FastifyRequest, reply: FastifyReply) {
         try {
-            const movies = await prisma.movie.findMany({
-                include: { tags: true }
-            });
+            const tags = await prisma.tag.findMany();
+            return reply.status(200).send({ success: true, tags });
 
-            return reply.status(200).send({ success: true, movies });
+        } catch (error) {
+            console.error(error);
+            return reply.status(500).send({ success: false, message: "Internal server error" });
+        }
+    },
+
+    async getContentByTag(request: FastifyRequest, reply: FastifyReply) {
+        const validation = getContentByTagSchema.safeParse(request.query);
+        if (!validation.success) {
+            return reply.status(400).send({ success: false, message: validation.error.errors[0].message });
+        }
+
+        try {
+            const { tagId, type } = validation.data;
+
+            if (type === "TYPE_MOVIE") {
+                const movies = await prisma.movie.findMany({
+                    where: {
+                        tags: {
+                            some: {
+                                id: {
+                                    in: tagId
+                                }
+                            }
+                        }
+                    }
+                });
+
+                return reply.status(200).send({ success: true, content: movies });
+            } 
+            
+            if (type === "TYPE_SERIES") {
+                const series = await prisma.series.findMany({
+                    where: {
+                        tags: {
+                            some: {
+                                id: {
+                                    in: tagId
+                                }
+                            }
+                        }
+                    }
+                });
+
+                return reply.status(200).send({ success: true, content: series });
+            }
 
         } catch (error) {
             console.error(error);
@@ -19,7 +63,7 @@ export const moviesController = {
     },
 
     async create(request: FastifyRequest, reply: FastifyReply) {
-        const validation = createMovieSchema.safeParse(request.body);
+        const validation = createTagSchema.safeParse(request.body);
         if (!validation.success) {
             return reply.status(400).send({ success: false, message: validation.error.errors[0].message });
         }
@@ -36,26 +80,16 @@ export const moviesController = {
         }
 
         try {
-            const { title, description, director, durationInMinutes, ageRestriction, tags, releaseYear } = validation.data;
+            const { name } = validation.data;
 
-            await prisma.movie.create({
+            await prisma.tag.create({
                 data: {
-                    title,
-                    description,
-                    director,
-                    durationInMinutes,
-                    ageRestriction,
-                    tags: {
-                        connect: tags?.map((tag : any) => {
-                            tags: tag.id
-                        })
-                    },
-                    releaseYear
+                    name
                 }
             });
 
-            return reply.status(201).send({ success: true, message: "Movie created" });
-        
+            return reply.status(201).send({ success: true, message: "Tag created" });
+
         } catch (error) {
             console.error(error);
             return reply.status(500).send({ success: false, message: "Internal server error" });
@@ -63,7 +97,7 @@ export const moviesController = {
     },
 
     async update(request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
-        const validation = updateMovieSchema.safeParse(request.body);
+        const validation = updateTagSchema.safeParse(request.body);
         if (!validation.success) {
             return reply.status(400).send({ success: false, message: validation.error.errors[0].message });
         }
@@ -80,33 +114,24 @@ export const moviesController = {
         }
 
         try {
-            const { title, description, director, durationInMinutes, ageRestriction, tags, releaseYear } = validation.data;
+            const { id } = request.params;
+            const { name } = validation.data;
 
-            await prisma.movie.update({
-                where: { id: request.params.id },
+            await prisma.tag.update({
+                where: { id },
                 data: {
-                    title,
-                    description,
-                    director,
-                    durationInMinutes,
-                    ageRestriction,
-                    tags: {
-                        connect: tags?.map((tag : any) => {
-                            tags: tag.id
-                        })
-                    },
-                    releaseYear
+                    name
                 }
             });
 
-            return reply.status(203).send({ success: true, message: "Movie updated" });
-        
+            return reply.status(203).send({ success: true, message: "Tag updated" });
+
         } catch (error) {
             console.error(error);
             return reply.status(500).send({ success: false, message: "Internal server error" });
         }
     },
-    
+
     async delete(request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
         const cookie = request.cookies.token;
         const decodedCookie = cookieService.validateCookie(cookie as string);
@@ -120,15 +145,17 @@ export const moviesController = {
         }
 
         try {
-            await prisma.movie.delete({
-                where: { id: request.params.id }
+            const { id } = request.params;
+
+            await prisma.tag.delete({
+                where: { id }
             });
 
-            return reply.status(204).send({ success: true, message: "Movie deleted" });
-        
+            return reply.status(204).send({ success: true, message: "Tag deleted" });
+
         } catch (error) {
             console.error(error);
             return reply.status(500).send({ success: false, message: "Internal server error" });
         }
-    },
-}
+    }
+};

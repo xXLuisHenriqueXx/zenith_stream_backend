@@ -1,4 +1,5 @@
-import z from "zod";
+import { z } from "zod";
+import { tagSchema } from "./tagSchema";
 
 export const createMovieSchema = z.object({
     title: z.string().min(3, { message: "Title must to have at least 3 characteres" }),
@@ -27,9 +28,7 @@ export const movieSchema = z.object({
     director: z.string(),
     durationInMinutes: z.number(),
     ageRestriction: z.enum(["AGE_ALL", "AGE_10", "AGE_12", "AGE_14", "AGE_16", "AGE_18"]),
-    tags: z.array(z.any()).optional(),
-    watchedBy: z.array(z.any()).optional(),
-    watchLaterBy: z.array(z.any()).optional(),
+    tags: tagSchema.array().optional(),
     releaseYear: z.number(),
     createdAt: z.date(),
 });
