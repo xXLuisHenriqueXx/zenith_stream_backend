@@ -5,6 +5,7 @@ import { FastifyTypeInstance } from "./types";
 import { adminController } from "./controllers/admin-controller";
 import { userController } from "./controllers/user-controller";
 import { moviesController } from "./controllers/movies-controller";
+import { seriesController } from "./controllers/series-controller";
 import { tagController } from "./controllers/tag-controller";
 
 import { adminLoginSchema, adminRegisterSchema } from "./schemas/adminSchemas";
@@ -176,6 +177,99 @@ export async function routes(app: FastifyTypeInstance) {
 
 
 
+  // Series routes
+  app.get("/series", {
+    schema: {
+      tags: ["Series"],
+      deprecated: false,
+      description: "Get all series",
+      response: {
+        200: z.object({ success: z.boolean(), series: seriesSchema.array() }),
+        500: z.object({ success: z.boolean(), message: z.string() })
+      }
+    }
+  }, seriesController.getAll);
+
+  app.post("/series/soap-opera", {
+    schema: {
+      tags: ["Series"],
+      deprecated: false,
+      description: "Create a soap opera",
+      body: createSeriesSchema,
+      response: {
+        201: z.object({ success: z.boolean(), message: z.string() }),
+        400: z.object({ success: z.boolean(), message: z.string() }),
+        401: z.object({ success: z.boolean(), message: z.string() }),
+        403: z.object({ success: z.boolean(), message: z.string() }),
+        500: z.object({ success: z.boolean(), message: z.string() })
+      }
+    }
+  }, seriesController.createSoapOpera);
+
+  app.post("/series/tv-show", {
+    schema: {
+      tags: ["Series"],
+      deprecated: false,
+      description: "Create a tv show",
+      body: createSeriesSchema,
+      response: {
+        201: z.object({ success: z.boolean(), message: z.string() }),
+        400: z.object({ success: z.boolean(), message: z.string() }),
+        401: z.object({ success: z.boolean(), message: z.string() }),
+        403: z.object({ success: z.boolean(), message: z.string() }),
+        500: z.object({ success: z.boolean(), message: z.string() })
+      }
+    }
+  }, seriesController.createTvShow);
+
+  app.post("/series/anime", {
+    schema: {
+      tags: ["Series"],
+      deprecated: false,
+      description: "Create an anime",
+      body: createSeriesSchema,
+      response: {
+        201: z.object({ success: z.boolean(), message: z.string() }),
+        400: z.object({ success: z.boolean(), message: z.string() }),
+        401: z.object({ success: z.boolean(), message: z.string() }),
+        403: z.object({ success: z.boolean(), message: z.string() }),
+        500: z.object({ success: z.boolean(), message: z.string() })
+      }
+    }
+  }, seriesController.createAnime);
+
+  app.put<{ Params: { id: string } }>("/series/:id", {
+    schema: {
+      tags: ["Series"],
+      deprecated: false,
+      description: "Update a series",
+      body: updateSeriesSchema,
+      response: {
+        203: z.object({ success: z.boolean(), message: z.string() }),
+        400: z.object({ success: z.boolean(), message: z.string() }),
+        401: z.object({ success: z.boolean(), message: z.string() }),
+        403: z.object({ success: z.boolean(), message: z.string() }),
+        500: z.object({ success: z.boolean(), message: z.string() })
+      }
+    }
+  }, seriesController.update);
+
+  app.delete<{ Params: { id: string } }>("/series/:id", {
+    schema: {
+      tags: ["Series"],
+      deprecated: false,
+      description: "Delete a series",
+      response: {
+        204: z.object({ success: z.boolean(), message: z.string() }),
+        401: z.object({ success: z.boolean(), message: z.string() }),
+        403: z.object({ success: z.boolean(), message: z.string() }),
+        500: z.object({ success: z.boolean(), message: z.string() })
+      }
+    }
+  }, seriesController.delete);
+  
+
+
   // Tag routes
   app.get("/tag", {
     schema: {
@@ -249,7 +343,7 @@ export async function routes(app: FastifyTypeInstance) {
     }
   }, tagController.delete);
 
-  
+
   
   // Health check route
   app.get("/health", (request, reply) => {
