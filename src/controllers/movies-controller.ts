@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import { prisma } from '../prisma';
 import { cookieService } from '../services/cookieService';
 import { createMovieSchema, updateMovieSchema } from '../schemas/movieSchema';
+import path from 'path';
 
 export const moviesController = {
     async getAll(request: FastifyRequest, reply: FastifyReply) {
@@ -36,7 +37,12 @@ export const moviesController = {
         }
 
         try {
-            const { title, description, director, durationInMinutes, ageRestriction, tags, releaseYear } = validation.data;
+            const { title, description, director, durationInMinutes, ageRestriction, tags, releaseYear, image } = validation.data;
+            
+            if (image) {
+                const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
+                require("fs").writeFile(`public/posters/movie/${title}.png`, base64Data, "base64");
+            }
 
             await prisma.movie.create({
                 data: {
@@ -50,7 +56,8 @@ export const moviesController = {
                             tags: tag.id
                         })
                     },
-                    releaseYear
+                    releaseYear,
+                    image: image ? `/posters/movie/${title}.png` : null
                 }
             });
 
@@ -80,7 +87,14 @@ export const moviesController = {
         }
 
         try {
-            const { title, description, director, durationInMinutes, ageRestriction, tags, releaseYear } = validation.data;
+            const { title, description, director, durationInMinutes, ageRestriction, tags, releaseYear, image } = validation.data;
+
+            if (image) {
+                require("fs").unlinkSync(path.join(__dirname, `../../public${image}`));
+
+                const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
+                require("fs").writeFile(`public/posters/movie/${title}.png`, base64Data, "base64");
+            }
 
             await prisma.movie.update({
                 where: { id: request.params.id },
@@ -95,7 +109,8 @@ export const moviesController = {
                             tags: tag.id
                         })
                     },
-                    releaseYear
+                    releaseYear,
+                    image: image ? `/posters/movie/${title}.png` : null
                 }
             });
 
@@ -120,6 +135,13 @@ export const moviesController = {
         }
 
         try {
+            const movie = await prisma.movie.findUnique({
+                where: { id: request.params.id }
+            });
+            if (movie.image) {
+                require("fs").unlinkSync(path.join(__dirname, `../../public${movie.image}`));
+            }
+
             await prisma.movie.delete({
                 where: { id: request.params.id }
             });

@@ -67,6 +67,7 @@ model Series {
   tags            Tags[]
   watchedBy       UserWatchedContent[]
   watchLaterBy    UserWatchLater[]
+  image           String
   createdAt       DateTime              @default(now())  
 }
 
@@ -77,6 +78,7 @@ model Episode {
   durationMinutes Int
   season          Int
   episodeNumber   Int
+  image           String
   series          Series                @relation(fields: [seriesId], references: [id])
   seriesId        String
   createdAt       DateTime              @default(now())  
@@ -93,6 +95,7 @@ model Movie {
   watchedBy       UserWatchedContent[]
   watchLaterBy    UserWatchLater[]
   releaseYear     Int
+  image           String
   createdAt       DateTime              @default(now())  
 }
 

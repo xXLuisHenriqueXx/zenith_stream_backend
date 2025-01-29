@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import { prisma } from '../prisma';
 import { cookieService } from '../services/cookieService';
 import { createSeriesSchema, updateSeriesSchema } from '../schemas/seriesSchema';
+import path from 'path';
 
 export const seriesController = {
     async getAll(request: FastifyRequest, reply: FastifyReply) {
@@ -36,7 +37,12 @@ export const seriesController = {
         }
 
         try {
-            const { title, description, producer, ageRestriction, tags, releaseYear } = validation.data;
+            const { title, description, producer, ageRestriction, tags, releaseYear, image } = validation.data;
+
+            if (image) {
+                const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
+                require("fs").writeFile(`public/posters/series/${title}.png`, base64Data, "base64");
+            }
 
             await prisma.series.create({
                 data: {
@@ -50,7 +56,8 @@ export const seriesController = {
                         })
                     },
                     releaseYear,
-                    type
+                    type,
+                    image: image ? `/posters/series/${title}.png` : null
                 }
             });
 
@@ -92,7 +99,14 @@ export const seriesController = {
         }
 
         try {
-            const { title, description, producer, ageRestriction, tags, releaseYear } = validation.data;
+            const { title, description, producer, ageRestriction, tags, releaseYear, image } = validation.data;
+
+            if (image) {
+                require("fs").unlink(path.join(__dirname, `../../public${image}`));
+
+                const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
+                require("fs").writeFile(`public/posters/series/${title}.png`, base64Data, "base64");
+            }
 
             await prisma.series.update({
                 where: { id: request.params.id },
@@ -106,7 +120,8 @@ export const seriesController = {
                             tags: tag.id
                         })
                     },
-                    releaseYear
+                    releaseYear,
+                    image: image ? `/posters/series/${title}.png` : null
                 }
             });
 
@@ -131,7 +146,16 @@ export const seriesController = {
         }
 
         try {
-            await prisma.series.delete({ where: { id: request.params.id } });
+            const series = await prisma.series.findUnique({ 
+                where: { id: request.params.id } 
+            });
+            if (series.image) {
+                require("fs").unlink(path.join(__dirname, `../../public${series.image}`));
+            }
+
+            await prisma.series.delete({ 
+                where: { id: request.params.id } 
+            });
 
             return reply.status(204).send({ success: true, message: "Series deleted" });
 

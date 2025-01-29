@@ -8,7 +8,8 @@ export const createSeriesSchema = z.object({
     ageRestriction: z.enum(["AGE_ALL", "AGE_10", "AGE_12", "AGE_14", "AGE_16", "AGE_18"]),
     releaseYear: z.number().min(1900, { message: "Release year must to be greater than 1900" }),
     type: z.enum(["SERIES_SOAP_OPERA", "SERIES_TV_SHOW", "SERIES_ANIME"]),
-    tags: z.array(z.any()).optional(),
+    tags: tagSchema.array().optional(),
+    image: z.any().nullable(),
 });
 
 export const updateSeriesSchema = z.object({
@@ -18,7 +19,8 @@ export const updateSeriesSchema = z.object({
     ageRestriction: z.enum(["AGE_ALL", "AGE_10", "AGE_12", "AGE_14", "AGE_16", "AGE_18"]),
     releaseYear: z.number().min(1900, { message: "Release year must to be greater than 1900" }),
     type: z.enum(["SERIES_SOAP_OPERA", "SERIES_TV_SHOW", "SERIES_ANIME"]),
-    tags: z.array(z.any()).optional(),
+    tags: tagSchema.array().optional(),
+    image: z.any().nullable(),
 });
 
 export const seriesSchema = z.object({
@@ -31,5 +33,6 @@ export const seriesSchema = z.object({
     type: z.enum(["SERIES_SOAP_OPERA", "SERIES_TV_SHOW", "SERIES_ANIME"]),
     episodes: z.any().array().optional(),
     tags: tagSchema.array().optional(),
+    image: z.string().nullable(),
     createdAt: z.date(),
 });

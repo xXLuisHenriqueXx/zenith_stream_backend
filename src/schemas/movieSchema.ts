@@ -7,8 +7,9 @@ export const createMovieSchema = z.object({
     director: z.string().min(3, { message: "Director must to have at least 3 characteres" }),
     durationInMinutes: z.number().min(1, { message: "Duration must to have at least 1 minute" }),
     ageRestriction: z.enum(["AGE_ALL", "AGE_10", "AGE_12", "AGE_14", "AGE_16", "AGE_18"]),
-    tags: z.array(z.any()).optional(),
+    tags: tagSchema.array().optional(),
     releaseYear: z.number().min(1900, { message: "Release year must to be greater than 1900" }),
+    image: z.any().nullable(),
 });
 
 export const updateMovieSchema = z.object({
@@ -17,8 +18,9 @@ export const updateMovieSchema = z.object({
     director: z.string().min(3, { message: "Director must to have at least 3 characteres" }).optional(),
     durationInMinutes: z.number().min(1, { message: "Duration must to have at least 1 minute" }).optional(),
     ageRestriction: z.enum(["AGE_ALL", "AGE_10", "AGE_12", "AGE_14", "AGE_16", "AGE_18"]).optional(),
-    tags: z.array(z.any()).optional(),
+    tags: tagSchema.array().optional(),
     releaseYear: z.number().min(1900, { message: "Release year must to be greater than 1900" }).optional(),
+    image: z.any().nullable(),
 });
 
 export const movieSchema = z.object({
@@ -30,5 +32,6 @@ export const movieSchema = z.object({
     ageRestriction: z.enum(["AGE_ALL", "AGE_10", "AGE_12", "AGE_14", "AGE_16", "AGE_18"]),
     tags: tagSchema.array().optional(),
     releaseYear: z.number(),
+    image: z.string().nullable(),
     createdAt: z.date(),
 });
