@@ -184,7 +184,7 @@ export async function routes(app: FastifyTypeInstance) {
       deprecated: false,
       description: "Get all series",
       response: {
-        200: z.object({ success: z.boolean(), series: seriesSchema.array() }),
+        200: z.object({ success: z.boolean(), tvShow: seriesSchema.array(), soapOpera: seriesSchema.array(), anime: seriesSchema.array() }),
         500: z.object({ success: z.boolean(), message: z.string() })
       }
     }

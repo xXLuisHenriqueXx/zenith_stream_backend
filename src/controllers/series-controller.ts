@@ -7,11 +7,22 @@ import path from 'path';
 export const seriesController = {
     async getAll(request: FastifyRequest, reply: FastifyReply) {
         try {
-            const series = await prisma.series.findMany({
+            const tvShow = await prisma.series.findMany({
+                where: { type: "SERIES_TV_SHOW" },
                 include: { tags: true }
             });
 
-            return reply.status(200).send({ success: true, series });
+            const soapOpera = await prisma.series.findMany({
+                where: { type: "SERIES_SOAP_OPERA" },
+                include: { tags: true }
+            });
+
+            const anime = await prisma.series.findMany({
+                where: { type: "SERIES_ANIME" },
+                include: { tags: true }
+            });
+
+            return reply.status(200).send({ success: true, tvShow, soapOpera, anime });
 
         } catch (error) {
             console.error(error);
