@@ -6,12 +6,14 @@ import { adminController } from "./controllers/admin-controller";
 import { userController } from "./controllers/user-controller";
 import { moviesController } from "./controllers/movies-controller";
 import { seriesController } from "./controllers/series-controller";
+import { episodeController } from "./controllers/episodes-controller";
 import { tagController } from "./controllers/tag-controller";
 
 import { adminLoginSchema, adminRegisterSchema } from "./schemas/adminSchemas";
 import { userRegisterSchema, watchContentSchema } from "./schemas/userSchema";
 import { createMovieSchema, movieSchema, updateMovieSchema } from "./schemas/movieSchema";
 import { createSeriesSchema, seriesSchema, updateSeriesSchema } from "./schemas/seriesSchema";
+import { createEpisodeSchema, episodeSchema, updateEpisodeSchema } from "./schemas/episodeSchema";
 import { createTagSchema, getContentByTagSchema, tagSchema, updateTagSchema } from "./schemas/tagSchema";
 
 export async function routes(app: FastifyTypeInstance) {
@@ -269,6 +271,55 @@ export async function routes(app: FastifyTypeInstance) {
   }, seriesController.delete);
   
 
+
+  // Episode routes
+  app.post<{ Params: { seriesID: string } }>("/episode/:seriesID", {
+    schema: {
+      tags: ["Episode"],
+      deprecated: false,
+      description: "Create an episode",
+      body: createEpisodeSchema,
+      response: {
+        201: z.object({ success: z.boolean(), message: z.string() }),
+        400: z.object({ success: z.boolean(), message: z.string() }),
+        401: z.object({ success: z.boolean(), message: z.string() }),
+        403: z.object({ success: z.boolean(), message: z.string() }),
+        500: z.object({ success: z.boolean(), message: z.string() })
+      }
+    }
+  }, episodeController.create);
+
+  app.put<{ Params: { id: string } }>("/episode/:id", {
+    schema: {
+      tags: ["Episode"],
+      deprecated: false,
+      description: "Update an episode",
+      body: updateEpisodeSchema,
+      response: {
+        203: z.object({ success: z.boolean(), message: z.string() }),
+        400: z.object({ success: z.boolean(), message: z.string() }),
+        401: z.object({ success: z.boolean(), message: z.string() }),
+        403: z.object({ success: z.boolean(), message: z.string() }),
+        500: z.object({ success: z.boolean(), message: z.string() })
+      }
+    }
+  }, episodeController.update);
+
+  app.delete<{ Params: { id: string } }>("/episode/:id", {
+    schema: {
+      tags: ["Episode"],
+      deprecated: false,
+      description: "Delete an episode",
+      response: {
+        204: z.object({ success: z.boolean(), message: z.string() }),
+        401: z.object({ success: z.boolean(), message: z.string() }),
+        403: z.object({ success: z.boolean(), message: z.string() }),
+        500: z.object({ success: z.boolean(), message: z.string() })
+      }
+    }
+  }, episodeController.delete);
+
+  
 
   // Tag routes
   app.get("/tag", {

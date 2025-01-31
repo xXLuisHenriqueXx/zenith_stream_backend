@@ -9,17 +9,17 @@ export const seriesController = {
         try {
             const tvShow = await prisma.series.findMany({
                 where: { type: "SERIES_TV_SHOW" },
-                include: { tags: true }
+                include: { tags: true, episodes: true }
             });
 
             const soapOpera = await prisma.series.findMany({
                 where: { type: "SERIES_SOAP_OPERA" },
-                include: { tags: true }
+                include: { tags: true, episodes: true }
             });
 
             const anime = await prisma.series.findMany({
                 where: { type: "SERIES_ANIME" },
-                include: { tags: true }
+                include: { tags: true, episodes: true }
             });
 
             return reply.status(200).send({ success: true, tvShow, soapOpera, anime });
