@@ -19,7 +19,7 @@ export const adminController = {
             return reply.status(401).send({ success: false, message: "Invalid access key" });
         }
 
-        const existingAdmin = await prisma.admin.findUnique({
+        const existingAdmin = await prisma.user.findUnique({
             where: { email }
         });
         if (existingAdmin) {
@@ -34,9 +34,15 @@ export const adminController = {
                     username,
                     password: hashedPassword,
                     email,
-                    age: "AGE_18",
+                    age: 40,
                     role: "ROLE_ADMIN",
                 }
+            });
+
+            reply.setCookie('token', cookieService.createCookie(email, "ROLE_ADMIN"), { 
+                path: '/',    
+                httpOnly: true,
+                 sameSite: 'lax',
             });
 
             return reply.status(201).send({ success: true, message: "Admin created successfully" });
@@ -60,7 +66,7 @@ export const adminController = {
                 return reply.status(401).send({ success: false, message: "Invalid access key" });
             }
 
-            const admin = await prisma.admin.findUnique({
+            const admin = await prisma.user.findUnique({
                 where: { email }
             });
             if (!admin) {

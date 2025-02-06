@@ -17,7 +17,7 @@ export const adminSchema = z.object({
     id: z.string().uuid(),
     username: z.string(),
     email: z.string().email(),
-    age: z.enum(["AGE_ALL", "AGE_10", "AGE_12", "AGE_14", "AGE_16", "AGE_18"]),
+    age: z.number().int(),
     role: z.enum(["ROLE_USER", "ROLE_ADMIN"]),
     watchedContent: z.array(z.any()).optional(),
     watchLater: z.array(z.any()).optional(),

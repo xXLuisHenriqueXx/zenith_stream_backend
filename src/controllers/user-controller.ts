@@ -60,9 +60,13 @@ export const userController = {
             const passwordMatch = await checkPassword(password, user.password);
             if (!passwordMatch) {
                 return reply.status(401).send({ success: false, message: "Invalid password" });
-            }
-            ;
-            reply.setCookie('token', cookieService.createCookie(email, user.role), { httpOnly: true });
+            };
+            
+            reply.setCookie('token', cookieService.createCookie(email, user.role), { 
+                path: '/',    
+                httpOnly: true,
+                 sameSite: 'lax',
+            });
 
             return reply.status(200).send({ success: true, message: "Logged in" });
 
@@ -116,7 +120,7 @@ export const userController = {
                 await prisma.user.update({
                     where: { email: decodedCookie.decoded.email },
                     data: {
-                        watchContent: {
+                        watchedContent: {
                             create: {
                                 type: "WATCHED_CONTENT_MOVIE",
                                 movie: {

@@ -10,11 +10,12 @@ import { episodeController } from "./controllers/episodes-controller";
 import { tagController } from "./controllers/tag-controller";
 
 import { adminLoginSchema, adminRegisterSchema } from "./schemas/adminSchemas";
-import { userRegisterSchema, watchContentSchema } from "./schemas/userSchema";
+import { userLoginSchema, userRegisterSchema, watchContentSchema } from "./schemas/userSchema";
 import { createMovieSchema, movieSchema, updateMovieSchema } from "./schemas/movieSchema";
 import { createSeriesSchema, seriesSchema, updateSeriesSchema } from "./schemas/seriesSchema";
 import { createEpisodeSchema, episodeSchema, updateEpisodeSchema } from "./schemas/episodeSchema";
 import { createTagSchema, getContentByTagSchema, tagSchema, updateTagSchema } from "./schemas/tagSchema";
+import { cookieService } from "./services/cookieService";
 
 export async function routes(app: FastifyTypeInstance) {
   // Admin routes
@@ -73,7 +74,7 @@ export async function routes(app: FastifyTypeInstance) {
       tags: ["User"],
       deprecated: false,
       description: "Login as user",
-      body: adminLoginSchema,
+      body: userLoginSchema,
       response: {
         201: z.object({ success: z.boolean(), message: z.string() }),
         400: z.object({ success: z.boolean(), message: z.string() }),
@@ -116,6 +117,32 @@ export async function routes(app: FastifyTypeInstance) {
     }
   }, userController.watchLater);
 
+
+
+  // Token routes
+  app.get("/validate/token", {
+    schema: {
+      tags: ["Token"],
+      deprecated: false,
+      description: "Validate token",
+      response: {
+        200: z.object({ success: z.boolean(), message: z.string(), role: z.string() }),
+        401: z.object({ success: z.boolean(), message: z.string() })
+      }
+    }
+  }, cookieService.validateToken);
+
+  app.get("/logout", {
+    schema: {
+      tags: ["Token"],
+      deprecated: false,
+      description: "Logout",
+      response: {
+        200: z.object({ success: z.boolean(), message: z.string() })
+      }
+    }
+  }, cookieService.logout);
+  
 
 
   // Movie routes

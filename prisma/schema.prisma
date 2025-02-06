@@ -112,10 +112,10 @@ model UserWatchedContent {
   type            WatchedContentType
   user            User                  @relation(fields: [userId], references: [id])
   userId          String
-  series          Series                @relation(fields: [seriesId], references: [id])
-  seriesId        String
-  movie           Movie                 @relation(fields: [movieId], references: [id])
-  movieId         String
+  series          Series?               @relation(fields: [seriesId], references: [id])
+  seriesId        String?
+  movie           Movie?                @relation(fields: [movieId], references: [id])
+  movieId         String?
   createdAt       DateTime              @default(now())  
 }
 
@@ -124,9 +124,9 @@ model UserWatchLater {
   type            WatchLaterType
   user            User                  @relation(fields: [userId], references: [id])
   userId          String
-  series          Series                @relation(fields: [seriesId], references: [id])
-  seriesId        String
-  movie           Movie                 @relation(fields: [movieId], references: [id])
-  movieId         String
+  series          Series?               @relation(fields: [seriesId], references: [id])
+  seriesId        String?
+  movie           Movie?                @relation(fields: [movieId], references: [id])
+  movieId         String?
   createdAt       DateTime              @default(now())  
 }

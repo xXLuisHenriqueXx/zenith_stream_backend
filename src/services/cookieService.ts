@@ -19,19 +19,24 @@ export const cookieService = {
     },
 
     async validateToken(request: FastifyRequest, reply: FastifyReply) {
-        const token = request.cookies?.token;
+        const token = request.cookies.token;
         if (!token) {
             reply.status(401).send({ success: false, message: 'No cookie' });
             return;
         }
 
-        const decodedCookie = this.validateCookie(token);
-        if (!decodedCookie) {
-            reply.status(401).send({ success: false, message: 'Invalid cookie' });
-            return;
-        }
+        try {
+            const decodedCookie = cookieService.validateCookie(token);
+            if (!decodedCookie) {
+                reply.status(401).send({ success: false, message: 'Invalid cookie' });
+                return;
+            }
 
-        reply.status(200).send({ success: true, message: 'Valid cookie', role: decodedCookie.decoded.role });
+            reply.status(200).send({ success: true, message: 'Valid cookie', role: decodedCookie.decoded.role });
+        } catch (error: any) {
+            console.error(error);
+            reply.status(500).send({ success: false, message: 'Internal server error' });
+        }
     },
 
     async logout(request: FastifyRequest, reply: FastifyReply) {
