@@ -1,53 +1,59 @@
-import { fastify } from 'fastify';
+import path from "node:path";
+import cookie from "@fastify/cookie";
 import { fastifyCors } from "@fastify/cors";
-import { validatorCompiler, serializerCompiler, ZodTypeProvider, jsonSchemaTransform } from "fastify-type-provider-zod";
+import multipart from "@fastify/multipart";
+import fastifyStatic from "@fastify/static";
 import { fastifySwagger } from "@fastify/swagger";
 import { fastifySwaggerUi } from "@fastify/swagger-ui";
-import cookie from "@fastify/cookie";
-import multipart from "@fastify/multipart";
-import { routes } from './routes';
-import path from 'path';
-import fastifyStatic from '@fastify/static';
+import { fastify } from "fastify";
+import {
+  type ZodTypeProvider,
+  jsonSchemaTransform,
+  serializerCompiler,
+  validatorCompiler,
+} from "fastify-type-provider-zod";
 
-const port = process.env.PORT ? parseInt(process.env.PORT) : undefined;
-const host = process.env.HOST;
-const JWT_SECRET = process.env.JWT_KEY || 'secret';
+import { env } from "./env";
+import { routes } from "./routes";
 
 export const app = fastify().withTypeProvider<ZodTypeProvider>();
 
 app.setValidatorCompiler(validatorCompiler);
 app.setSerializerCompiler(serializerCompiler);
 
-app.register(fastifyCors, { origin: 'http://localhost:5173', credentials: true });
+app.register(fastifyCors, {
+  origin: "http://localhost:5173",
+  credentials: true,
+});
 app.register(fastifySwagger, {
-    openapi: {
-        info: {
-            title: 'Pomodoro Backend',
-            version: '1.0.0'
-        }
+  openapi: {
+    info: {
+      title: "Pomodoro Backend",
+      version: "1.0.0",
     },
-    transform: jsonSchemaTransform
+  },
+  transform: jsonSchemaTransform,
 });
 app.register(fastifySwaggerUi, {
-    routePrefix: '/docs',
+  routePrefix: "/docs",
 });
 
 app.register(cookie, {
-    secret: JWT_SECRET
+  secret: env.JWT_KEY,
 });
 
 app.register(fastifyStatic, {
-    root: path.join(__dirname, 'public'),
+  root: path.join(__dirname, "public"),
 });
 
 app.register(multipart, {
-    limits: {
-        fileSize: 50 * 1024 * 1024
-    }
+  limits: {
+    fileSize: 50 * 1024 * 1024,
+  },
 });
 
-app.register(routes, { prefix: '/api' });
+app.register(routes, { prefix: "/api" });
 
-app.listen({ port: port, host: host }).then(() => {
-    console.log('Server is running on port 3000');
+app.listen({ port: env.PORT, host: env.HOST }).then(() => {
+  console.log("Server is running on port 3000");
 });

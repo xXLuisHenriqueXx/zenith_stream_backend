@@ -1,156 +1,228 @@
-import { FastifyReply, FastifyRequest } from 'fastify';
-import { prisma } from '../prisma';
-import { cookieService } from '../services/cookieService';
-import { createMovieSchema, updateMovieSchema } from '../schemas/movieSchema';
-import path from 'path';
+import fs from "node:fs";
+import path from "node:path";
+import type { FastifyReply, FastifyRequest } from "fastify";
+import type { z } from "zod";
+import { prisma } from "../prisma";
+
+import { createMovieSchema, updateMovieSchema } from "../schemas/movieSchema";
+import type { tagSchema } from "../schemas/tagSchema";
+import { cookieService } from "../services/cookieService";
+
+type Tag = z.infer<typeof tagSchema>;
 
 export const moviesController = {
-    async getAll(request: FastifyRequest, reply: FastifyReply) {
-        try {
-            const movies = await prisma.movie.findMany({
-                include: { tags: true }
-            });
+  async getAll(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const movies = await prisma.movie.findMany({
+        include: { tags: true },
+      });
 
-            return reply.status(200).send({ success: true, movies });
+      return reply.status(200).send({ success: true, movies });
+    } catch (error: unknown) {
+      console.error(error);
+      return reply
+        .status(500)
+        .send({ success: false, message: "Internal server error" });
+    }
+  },
 
-        } catch (error) {
-            console.error(error);
-            return reply.status(500).send({ success: false, message: "Internal server error" });
-        }
-    },
+  async create(request: FastifyRequest, reply: FastifyReply) {
+    const validation = createMovieSchema.safeParse(request.body);
+    if (!validation.success) {
+      return reply
+        .status(400)
+        .send({ success: false, message: validation.error.errors[0].message });
+    }
 
-    async create(request: FastifyRequest, reply: FastifyReply) {
-        const validation = createMovieSchema.safeParse(request.body);
-        if (!validation.success) {
-            return reply.status(400).send({ success: false, message: validation.error.errors[0].message });
-        }
+    const cookie = request.cookies.token;
+    const decodedCookie = cookieService.validateCookie(cookie as string);
+    if (!cookie || !decodedCookie) {
+      return reply
+        .status(401)
+        .send({ success: false, message: "Invalid cookie" });
+    }
 
-        const cookie = request.cookies.token;
-        const decodedCookie = cookieService.validateCookie(cookie as string);
-        if (!cookie || !decodedCookie) {
-            return reply.status(401).send({ success: false, message: "Invalid cookie" });
-        }
+    const isAdmin = decodedCookie.decoded.role === "ROLE_ADMIN";
+    if (!isAdmin) {
+      return reply.status(403).send({ success: false, message: "Forbidden" });
+    }
 
-        const isAdmin = decodedCookie.decoded.role === "ROLE_ADMIN";
-        if (!isAdmin) {
-            return reply.status(403).send({ success: false, message: "Forbidden" });
-        }
+    try {
+      const {
+        title,
+        description,
+        director,
+        durationInMinutes,
+        ageRestriction,
+        tags,
+        releaseYear,
+        image,
+      } = validation.data;
 
-        try {
-            const { title, description, director, durationInMinutes, ageRestriction, tags, releaseYear, image } = validation.data;
-            
-            if (image) {
-                const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
-                require("fs").writeFile(`public/posters/movie/${title}.png`, base64Data, "base64");
+      if (image) {
+        const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
+        fs.writeFile(
+          `public/posters/movie/${title}.png`,
+          base64Data,
+          "base64",
+          err => {
+            if (err) {
+              console.error(err);
             }
+          }
+        );
+      }
 
-            await prisma.movie.create({
-                data: {
-                    title,
-                    description,
-                    director,
-                    durationInMinutes,
-                    ageRestriction,
-                    tags: {
-                        connect: tags?.map((tag : any) => {
-                            tags: tag.id
-                        })
-                    },
-                    releaseYear,
-                    image: image ? `/posters/movie/${title}.png` : null
-                }
-            });
+      await prisma.movie.create({
+        data: {
+          title,
+          description,
+          director,
+          durationMinutes: durationInMinutes,
+          ageRestriction,
+          tags: {
+            connect: tags?.map((tag: Tag) => ({
+              id: tag.id,
+            })),
+          },
+          releaseYear,
+          image: image
+            ? `/posters/movie/${title}.png`
+            : "https://placecats.com/neo/300/200",
+        },
+      });
 
-            return reply.status(201).send({ success: true, message: "Movie created" });
-        
-        } catch (error) {
-            console.error(error);
-            return reply.status(500).send({ success: false, message: "Internal server error" });
-        }
-    },
+      return reply
+        .status(201)
+        .send({ success: true, message: "Movie created" });
+    } catch (error: unknown) {
+      console.error(error);
+      return reply
+        .status(500)
+        .send({ success: false, message: "Internal server error" });
+    }
+  },
 
-    async update(request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
-        const validation = updateMovieSchema.safeParse(request.body);
-        if (!validation.success) {
-            return reply.status(400).send({ success: false, message: validation.error.errors[0].message });
-        }
+  async update(
+    request: FastifyRequest<{ Params: { id: string } }>,
+    reply: FastifyReply
+  ) {
+    const validation = updateMovieSchema.safeParse(request.body);
+    if (!validation.success) {
+      return reply
+        .status(400)
+        .send({ success: false, message: validation.error.errors[0].message });
+    }
 
-        const cookie = request.cookies.token;
-        const decodedCookie = cookieService.validateCookie(cookie as string);
-        if (!cookie || !decodedCookie) {
-            return reply.status(401).send({ success: false, message: "Invalid cookie" });
-        }
+    const cookie = request.cookies.token;
+    const decodedCookie = cookieService.validateCookie(cookie as string);
+    if (!cookie || !decodedCookie) {
+      return reply
+        .status(401)
+        .send({ success: false, message: "Invalid cookie" });
+    }
 
-        const isAdmin = decodedCookie.decoded.role === "ROLE_ADMIN";
-        if (!isAdmin) {
-            return reply.status(403).send({ success: false, message: "Forbidden" });
-        }
+    const isAdmin = decodedCookie.decoded.role === "ROLE_ADMIN";
+    if (!isAdmin) {
+      return reply.status(403).send({ success: false, message: "Forbidden" });
+    }
 
-        try {
-            const { title, description, director, durationInMinutes, ageRestriction, tags, releaseYear, image } = validation.data;
+    try {
+      const {
+        title,
+        description,
+        director,
+        durationInMinutes,
+        ageRestriction,
+        tags,
+        releaseYear,
+        image,
+      } = validation.data;
 
-            if (image) {
-                require("fs").unlinkSync(path.join(__dirname, `../../public${image}`));
+      if (image) {
+        fs.unlinkSync(path.join(__dirname, `../../public${image}`));
 
-                const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
-                require("fs").writeFile(`public/posters/movie/${title}.png`, base64Data, "base64");
+        const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
+        fs.writeFile(
+          `public/posters/movie/${title}.png`,
+          base64Data,
+          "base64",
+          err => {
+            if (err) {
+              console.error(err);
             }
+          }
+        );
+      }
 
-            await prisma.movie.update({
-                where: { id: request.params.id },
-                data: {
-                    title,
-                    description,
-                    director,
-                    durationInMinutes,
-                    ageRestriction,
-                    tags: {
-                        connect: tags?.map((tag : any) => {
-                            tags: tag.id
-                        })
-                    },
-                    releaseYear,
-                    image: image ? `/posters/movie/${title}.png` : null
-                }
-            });
+      await prisma.movie.update({
+        where: { id: request.params.id },
+        data: {
+          title,
+          description,
+          director,
+          durationMinutes: durationInMinutes,
+          ageRestriction,
+          tags: {
+            connect: tags?.map((tag: Tag) => ({
+              id: tag.id,
+            })),
+          },
+          releaseYear,
+          image: image
+            ? `/posters/movie/${title}.png`
+            : "https://placecats.com/neo/300/200",
+        },
+      });
 
-            return reply.status(203).send({ success: true, message: "Movie updated" });
-        
-        } catch (error) {
-            console.error(error);
-            return reply.status(500).send({ success: false, message: "Internal server error" });
-        }
-    },
-    
-    async delete(request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
-        const cookie = request.cookies.token;
-        const decodedCookie = cookieService.validateCookie(cookie as string);
-        if (!cookie || !decodedCookie) {
-            return reply.status(401).send({ success: false, message: "Invalid cookie" });
-        }
+      return reply
+        .status(203)
+        .send({ success: true, message: "Movie updated" });
+    } catch (error: unknown) {
+      console.error(error);
+      return reply
+        .status(500)
+        .send({ success: false, message: "Internal server error" });
+    }
+  },
 
-        const isAdmin = decodedCookie.decoded.role === "ROLE_ADMIN";
-        if (!isAdmin) {
-            return reply.status(403).send({ success: false, message: "Forbidden" });
-        }
+  async delete(
+    request: FastifyRequest<{ Params: { id: string } }>,
+    reply: FastifyReply
+  ) {
+    const cookie = request.cookies.token;
+    const decodedCookie = cookieService.validateCookie(cookie as string);
+    if (!cookie || !decodedCookie) {
+      return reply
+        .status(401)
+        .send({ success: false, message: "Invalid cookie" });
+    }
 
-        try {
-            const movie = await prisma.movie.findUnique({
-                where: { id: request.params.id }
-            });
-            if (movie.image) {
-                require("fs").unlinkSync(path.join(__dirname, `../../public${movie.image}`));
-            }
+    const isAdmin = decodedCookie.decoded.role === "ROLE_ADMIN";
+    if (!isAdmin) {
+      return reply.status(403).send({ success: false, message: "Forbidden" });
+    }
 
-            await prisma.movie.delete({
-                where: { id: request.params.id }
-            });
+    try {
+      const movie = await prisma.movie.findUnique({
+        where: { id: request.params.id },
+      });
+      if (movie?.image) {
+        fs.unlinkSync(path.join(__dirname, `../../public${movie.image}`));
+      }
 
-            return reply.status(204).send({ success: true, message: "Movie deleted" });
-        
-        } catch (error) {
-            console.error(error);
-            return reply.status(500).send({ success: false, message: "Internal server error" });
-        }
-    },
-}
+      await prisma.movie.delete({
+        where: { id: request.params.id },
+      });
+
+      return reply
+        .status(204)
+        .send({ success: true, message: "Movie deleted" });
+    } catch (error: unknown) {
+      console.error(error);
+      return reply
+        .status(500)
+        .send({ success: false, message: "Internal server error" });
+    }
+  },
+};

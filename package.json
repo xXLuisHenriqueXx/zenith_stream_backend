@@ -4,7 +4,7 @@
   "main": "app.ts",
   "scripts": {
     "start": "tsx src/app.ts",
-    "dev": "tsx watch src/app.ts"
+    "dev": "tsx watch --env-file=.env src/app.ts"
   },
   "repository": {
     "type": "git",
@@ -37,6 +37,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.10.10",
